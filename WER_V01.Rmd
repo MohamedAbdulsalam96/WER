@@ -1,0 +1,355 @@
+---
+title: "Energy Sector Weekly Report"
+author: "[François de Ryckel](https://fderyckel.github.io/aboutme/)<br>[I'm on Twitter](https://twitter.com/Read_The_Dung)"
+date: "`r format(Sys.Date(), '%d %B, %Y')`"
+output: 
+  html_document:
+    highlight: tango
+    theme: spacelab
+    toc_float: true
+    toc: yes
+    toc_depth: 2
+    df_print: paged
+---
+
+This is the weekly **Energy Sector** financial summary.  
+
+```{r load_library, message = FALSE, warning = FALSE, echo = FALSE}
+library(tidyverse)
+library(forcats)
+library(lubridate)
+library(scales)
+
+# setting up the path within the project for easier portability of code
+thePath <- here::here()
+tickers <- readr::read_csv(paste0(thePath, "/10_energy/", "tickers.csv"))
+
+# Change some of the columns into factors
+tickers[,4:7] <- tickers[,4:7] %>% mutate_all(funs(as_factor))
+```
+
+```{r download_data, eval = FALSE, echo = FALSE}
+# Downloading data with AV
+av_tickers <- tickers %>% select(av_ticker) %>% na.omit()
+
+av_tickers <- av_tickers[26:40,]
+
+for (i in 1:nrow(av_tickers)){
+  print(av_tickers$av_ticker[i])
+  data = quantmod::getSymbols(Symbols = av_tickers$av_ticker[i],
+                    src = "av",
+                    api.key = "W7SHG93NFG5YWE2K", 
+                    output.size = "full", 
+                    auto.assign = FALSE,
+                    index.class="POSIXct")
+  colnames(data) = c("Open", "High", "Low", "Close", "Volume")
+  zoo::write.zoo(data, paste0(thePath, "/10_energy/StockData_av/", av_tickers$av_ticker[i], ".csv"), 
+                 sep = ",", row.names = FALSE)
+}
+```
+
+```{r used_functions, echo = FALSE}
+## function to read the .csv file for the given period
+read_fin_data <- function(tickers, 
+                          thePath = paste0(here::here(), "/10_energy/StockData_av/"),  
+                          start_date = today()-365, end_date = today()) {
+  df <- read_csv(paste0(thePath, tickers, ".csv"))
+  df <- df %>% as_tibble() %>% select(Index, Close)
+  df$Index <- ymd(df$Index)
+  df <- df %>% filter(Index <= end_date) %>% 
+    filter(Index >= start_date) %>% 
+    mutate(adj_return = round((Close / first(Close) - 1)*100, 0))
+  return(df)
+}
+
+# function calculate the essentials variables for each stock 
+# DO I need week_number???????
+create_big_df <- function(tickerA){
+  yo <- read_csv(paste0(thePath, "/10_energy/StockData_av/", tickerA, ".csv")) 
+  yo$Index <- ymd(yo$Index)
+  yo <- yo %>% arrange(Index) %>% 
+    mutate(year = year(Index), week_number = isoweek(Index), 
+           days_of_week = wday(Index, label = TRUE, abbr = FALSE), 
+           weekly_return = ((Close / lag(Close, 5)) - 1) * 100, 
+           daily_return = ((Close / lag(Close)) - 1) * 100, 
+           monthly_return = ((Close / lag(Close, 20)) - 1) * 100, 
+           trimester_return = ((Close / lag(Close, 62)) - 1) * 100, 
+           semester_return = ((Close / lag(Close, 120)) - 1) * 100, 
+           yearly_return = ((Close / lag(Close, 252)) - 1) * 100, 
+           monthly_sharp_Ratio = round(RollingWindow::RollingMean(daily_return, window = 21, na_method = "ignore") / 
+                                      RollingWindow::RollingStd(daily_return, window = 21, na_method = "ignore"), 3), 
+           yearly_sharp_Ratio = round(RollingWindow::RollingMean(daily_return, window = 252, na_method = "ignore") / 
+                                      RollingWindow::RollingStd(daily_return, window = 252, na_method = "ignore"), 3),
+           bi_monthly_return = ((Close / lag(Close, 10)) - 1) * 100, 
+           SMA50 = TTR::SMA(Close, n = 50), 
+           SMA50 = (Close / SMA50) - 1, 
+           SMA50_bin = if_else(SMA50 > 0, 1, 0), 
+           roll_sd_sma50 = RollingWindow::RollingStd(SMA50, window = 250, na_method = "ignore"), 
+           roll_mean_sma50 = RollingWindow::RollingMean(SMA50, window = 250, na_method = "ignore"), 
+           diff_sd_sma50 = round((SMA50 - roll_mean_sma50) / roll_sd_sma50, 2)) %>% 
+    #filter(days_of_week == "Monday") %>% tail(., 12) %>% 
+    #mutate(bi_monthly_yes = rep(seq(0, 1), 6)) %>% 
+    select(Index, days_of_week, weekly_return, bi_monthly_return, monthly_return, trimester_return, SMA50_bin, 
+           semester_return, yearly_return, monthly_sharp_Ratio, yearly_sharp_Ratio, diff_sd_sma50) 
+  }
+
+```
+
+```{r main_df, echo=FALSE, message = FALSE, warning = FALSE}
+possibly_create_big_df <- possibly(create_big_df, otherwise = NA)
+
+df2 <- tickers %>% select(ticker = av_ticker, ticker_name, ETF, ticker_industry, ticker_subsector) %>% 
+  filter(ETF != "ETF") %>% select(-ETF) %>% na.omit() %>% 
+  mutate(yoop = map(ticker, possibly_create_big_df)) %>% filter(!is.na(yoop)) %>% unnest() 
+
+df2$Index <- ymd(df2$Index)
+
+```
+
+The *Weekly Energy Report* attempt to see the big trends in the energy sectors[^0]. 
+
+At the moment, the report is build around `r nrow(tickers)` companies.  You can see their tickers, names, sectors and sub-sectors at [the end](#list_financial_instru) of the report. Also, the focus is really on North-American Oil & Gas companies.  We will address this shortcoming soon by adding more European and Asian energy companies to the mix as well as diversifying the industries to include uranium, electricity generations, renewable energies and industrials[^1].  
+
+[^1]: We use the *AlphaVantage* [API](https://www.alphavantage.co/) to get our data.  
+
+[^0]: The report has been generated with the R language and thanks to the many community members who have contributed their time in building packages.  
+ 
+We would love to hear from you. Is there typos, mistakes?  Are graphs unclear?  not useful? Should we add additional resources and analysis?  Write us a [mail](mailto:f.deryckel@gmail.com)    
+
+# What made the news ?
+
+* Brent went from a high of $80.5 to $76.5... Still a very nice price for all the oil producers.  
+* The party in the Oil & Gas energy stocks was put on a halt at the end of the week when the OPEC big bwana, Saudi Arabia through its energy minister and its Russian counterpart met in St. Petersburg and decided it was maybe time to pump and bring on the market some more oil.  THE EIA announcing an increase in stocks on Wednesday did not help.  
+      + I am finding this alliance between KSA and Russia rather beffudling.  On one side, Russia is parterning with Iran in Syria.  On the Other side, this is the second time in a month that the energy minister of both countries are meeting and talking oil output.  I am wondering how long can Russia stay so slick.  
+* OPEC Meeting on the 22 June in Vienna where they'll discuss increase in oil production.  I know quite a few have been amazed on how OPEC has managed to mainly stick to their quota for the last couple of years.  We've been so used with OPEC that there is always a few members not respecting their deal.    
+* We got a note from the FED Mai minute meeting: if the price of oil continue to climb then there might be another increase in interest rate.  Glad the FED guys are not sleeping on their desk and realize that higher energy price will lead to higher inflation... duh!  
+* The increase in price has many reasons. To go over a few: 
+     + reduction in output from a few places such as Venezuela
+     + tension in the Middle-East (when is that not a news?).  More specifically, we have Saudi Arabia and Iran not going on to well together lately.  Uncle Donald adding *fire* to the situation by going back on the deal the US made with a few other countries (Russia, Germany, France) to get back Iran on the international scene
+     + As the US renegate the Iranian deal, it might hurt more small European Cies doing business there as there will be liable to US sanctions.  China, India will keep buying their oil there as they have done in the past.  
+* Saudi has been a reliable indicator.  They said they wanted oil at $80, they now get it... so they are willing to produce more as they don't want demand to crumble because of too high of a price.  Saudi, Russia will do everything they can to keep price at that level (understand $60-$80) as they need the money for their own national budget (think Saudi 2030 Vision).
+* As long as electric cars are a luxury good, increase in oil price will do little to switch consumers to that market.  
+* In the NIMBY section, we have the Canadian saga about the Trans Mountain pipeline.  Kinder Morgan (KMI) being in between the legal battle of British Columbia and Alberta.  It is nice to have oil but if you can't move it ... it sucks!
+
+# Report higlights. 
+
+* [Last week report](https://fderyckel.github.io/WER/reports/WER_2018_05_22.html) had so many [stocks above their 50 SMA](#og_breadth), it was just a matter of time to have a reversion to more normal level. And this is what happened on Thursday and Friday.    
+* At the same time, we had a few individual stocks who were so high above their 50 SMA (comparing to their average distance from their 50 SMA), that it was also just a question of time (days) for these stocks to go back to their more normal level.  Chesapeake Energy Corporation (CHK) was such a stock.  It still climbed up early in the week, but got a severe reversal on Thursday and Friday.  
+* On the [Energy Overview](#ener_overview), we notice that all form of energy stumbled including uranium and coal.  Gaz is the only one that managed to keep its cool. 
+* Most energies ETF have delivered *alpha* vs the S&P500 over the last 3 months and 12 months.  Uranium and the MLP's being exception. The coal party - after Trump election - seems to see its end.   
+* If we dig in the O&G, XOP and CHIE hae been the best performers.  Canadians energy stocks still struggles to keep up.  The Canadian exchanges are still suffering from the commodities bear market.  There are signs we are getting out of it though.
+* For seven weeks in a row, we got the positive weekly returns for over 50% of the O&G stocks: [the median line](#weekly_return) being positive. 
+
+
+# General Energy overview {#ener_overview} 
+
+List of ETF selected for the general overview.  
+```{r energy_global_etf_choice, echo = FALSE, message = FALSE}
+df_ticker <- tibble(ticker = c("VDE", "IXC", "KOL", "URA", "UNG", "MLPX", "USO", "SPY"))
+
+df <- inner_join(df_ticker %>% select(av_ticker = ticker), tickers, by = "av_ticker") %>% 
+  select(ticker = av_ticker, Name = ticker_name)
+
+knitr::kable(df, caption = "Selected Energy related ETF")
+```
+
+Returns of the energy ETF over the last 3 months
+```{r energy_3months_return, echo = FALSE, message = FALSE, out.width = 900}
+df <- df_ticker %>% 
+  mutate(price_data = map(ticker, function(.x) read_fin_data(.x, start_date = today() - 63))) %>% 
+  unnest()
+
+plotly::plot_ly(df, x = ~Index, y = ~adj_return, color = ~ticker, 
+                type = "scatter", mode = "lines")  %>%
+  plotly::layout(title = '3 months ETF Returns', 
+                 xaxis = list(title = "Dates"), yaxis = list(title = "Return on Closed Prices (in %)"))
+```
+
+Returns of the energy ETF over the last 12 months
+```{r energy_12months_return, echo = FALSE, message = FALSE, out.width = 900}
+df <- df_ticker %>% 
+  # Take out UNG has it has some weird split that have not been accounted for
+  filter(ticker != "UNG") %>% 
+  mutate(price_data = map(ticker, function(.x) read_fin_data(.x, start_date = today() - 365))) %>% 
+  unnest()
+
+#library(plotly)
+plotly::plot_ly(df, x = ~Index, y = ~adj_return, color = ~ticker, 
+                type = "scatter", mode = "lines")  %>%
+  plotly::layout(title = '12 months ETF Returns', 
+                 xaxis = list(title = "Dates"), yaxis = list(title = "Return on Closed Prices (in %)"))
+```
+
+# The Oil & Gas Industry  
+Following GISC, the Oil & Gas (OG) industry consists of the following sectors and sub-sectors: 
+```{r display_sectors_OG, echo = FALSE}
+yo <- tickers %>% filter(ticker_industry == "oil_gas") %>%  
+  select(ticker_sector, ticker_subsector) %>% 
+  group_by(ticker_sector, ticker_subsector) %>% unique() %>% 
+  na.omit() %>% select(Sector = ticker_sector, Subsector = ticker_subsector)
+
+yo$Sector = str_replace_all(yo$Sector, c("energy_equipment_services" = "Equipment & Services", 
+                                         "oil_gas_consumable_fuels" = "Consumable Fuels"))
+
+yo$Subsector = str_replace_all(yo$Subsector, c("drilling" = "Drilling", 
+                                               "equipment_services" = "Equipment & Services Cies", 
+                                               "exploration_production" = "Exploration & Production Cies", 
+                                               "integrated" = "Major Integrated Cies",
+                                               "refining_marketing" = "Refining & Marketing Cies", 
+                                               "storage_transportation" = "Storage & Transportation Cies"))
+
+knitr::kable(yo, caption = "List of Sectors and Sub-sectors of the O&G Industry")
+```
+
+[At the bottom of this file](##list_financial_instru), there is the complete list of financial instruments with their sectors and sub-sectors on which the following analysis has been based on. 
+
+## Long term trends
+Let's check the main Oil & Gas ETF returns. 
+We have picked the following ETF
+```{r og_etf, echo = FALSE}
+og_etf <- c("XEG.TO", "IXC", "VDE", "CHIE", "XOP", "XES", "XLE")
+df <- tickers %>% filter(av_ticker %in% og_etf) %>% 
+  select(Ticker = av_ticker, Name = ticker_name)
+knitr::kable(df)
+```
+
+```{r etf_oneyar_return, echo = FALSE, out.width = 900, warning = FALSE, message = FALSE}
+df <- tibble(ticker = og_etf)
+
+df <- df %>% 
+  mutate(price_data = map(ticker, function(.x) read_fin_data(.x))) %>% 
+  unnest()
+
+#library(plotly)
+plotly::plot_ly(df, x = ~Index, y = ~adj_return, color = ~ticker, 
+                type = "scatter", mode = "lines")  %>%
+  plotly::layout(title = '1 year ETF Returns', 
+                 xaxis = list(title = "Dates"), yaxis = list(title = "Return on Closed Prices"))
+
+```
+
+## Breadth of the Oil & Gas Market  {#og_breadth}
+Usually, on shorter time frame, we use the 50 days Standard Moving Average (SMA) to see if a stock is in an uptrend.  The graphs below does exactly that: it checks the percentage of stocks that are trading above their 50 days SMA.  This also tell us when the sector might be over-extended to the upside or to the downside.  
+
+```{r percent_stock_above_sma50, echo=FALSE, warning=FALSE, out.width = 700, dpi = 300}
+df <- df2 %>% group_by(Index) %>% 
+  summarise(number_stocks = n(), 
+            stocks_above_sma50 = sum(SMA50_bin, na.rm = TRUE)) %>% 
+  mutate(percentage_above = stocks_above_sma50 / number_stocks)
+
+# filter df for the last 5 years
+yo <- df %>% filter(Index >= today() - 5*365) %>% 
+  #filtering out the days some markets are not open
+  mutate(market_open = if_else(number_stocks < 0.75 * lag(number_stocks), 0, 1)) %>% 
+  filter(market_open == 1)
+
+
+
+ggplot(yo, aes(x = Index, y = percentage_above)) + 
+  geom_line() + 
+  geom_hline(yintercept = 0.875, color = "red", linetype = "dashed") + 
+  geom_hline(yintercept = 0.125, color = "red", linetype = "dashed") + 
+  scale_y_continuous(labels = scales::percent) + 
+  scale_x_date(name = "Dates", date_breaks = "4 months", date_labels = "%b %y") + 
+  theme(axis.title.y = element_blank(), 
+        axis.title.x = element_blank(), 
+        axis.text.x = element_text(angle = 60, vjust = 0.5), 
+        panel.background = element_rect(fill = "white"), 
+        panel.grid.minor.y = element_line(colour = "grey50", linetype = "dashed"), 
+        panel.grid.major.y = element_line(colour = "grey80", linetype = "dashed")) + 
+  ggtitle("Percentage of stocks above their 50 SMA")
+```
+
+
+## Weekly and bi-monthly returns  {#weekly_returns} 
+In this section, we check the weekly return for the last 12 weeks for all stocks belonging to the industry, sectors and sub-sectors.  
+```{r main_df_creation, message = FALSE, warning = FALSE, echo = FALSE}
+df <- df2 %>% 
+  filter(days_of_week == "Monday" & ticker_industry == "oil_gas") %>% group_by(ticker) %>% 
+  arrange(desc(Index)) %>% 
+  filter(row_number() %in% c(1:12)) %>% 
+  mutate(bi_monthly_yes = rep(seq(0, 1), 6)) %>% 
+  ungroup()
+
+```
+
+
+```{r weekly_return, warning=FALSE, echo = FALSE, out.width = 900, dpi = 300}
+# Function to detect ouliers-ish (very loose definition)
+is_outlier <- function(x) {
+  return(x < quantile(x, 0.25) - 0.95 * IQR(x) | x > quantile(x, 0.75) + 0.95 * IQR(x))
+}
+
+yo <- ymd(as.character(df$Index)) 
+yo <- tibble(dates = yo) %>% group_by(dates) %>% summarise(yup = unique(dates)) %>% arrange(desc(dates)) 
+
+df %>% filter(Index >= yo$dates[12]) %>% 
+  mutate(outlier = if_else(is_outlier(weekly_return), ticker, as.character(NA))) %>% 
+  ggplot(., aes(x=as.factor(Index), y = weekly_return, col = Index)) + geom_boxplot() + 
+  scale_colour_gradient(low = "dodgerblue1", high = "dodgerblue4") + 
+  theme(axis.text.x = element_text(colour="grey20", size=8, angle=50, hjust=.5, vjust=.5), 
+        panel.background = element_rect(fill = "white"), 
+        panel.grid.minor.y = element_line(colour = "grey50", linetype = "dashed"), 
+        panel.grid.major.y = element_line(colour = "grey80", linetype = "dashed"), 
+        legend.position = "none") + 
+  geom_text(aes(label = outlier), na.rm = TRUE, hjust = -0.3, size = 2, check_overlap = TRUE) + 
+  geom_hline(yintercept = 0, color = "red") + 
+  ggtitle("Energy - Weekly Return") + ylim(c(-15, 15)) + 
+  labs(x= "Dates", y="Weekly Return (in %)") 
+```
+
+We do the same graph but with a 2 weeks return and a disaggregation by sub-sector.  
+```{r bi_monthly_return, warning=FALSE, echo = FALSE, out.width = 900, dpi = 300}
+# bi-monthly return boxplot ordered with sub-sector
+n <- seq(0:5) - 1
+dates <- tibble(value = yo$dates[1] - 14*n)
+df %>% filter(Index %in% unlist(dates)) %>% 
+  group_by(Index) %>% 
+  #mutate(outlier = if_else(is_outlier(bi_monthly_return), ticker, as.character(NA))) %>% 
+  ggplot(., aes(x=as.factor(Index), y = bi_monthly_return, fill = ticker_subsector)) + geom_boxplot() + 
+  theme(axis.text.x = element_text(colour="grey20", size=8, angle=50, hjust=.5, vjust=.5), 
+        panel.background = element_rect(fill = "white"), 
+        panel.grid.minor.y = element_line(colour = "grey50", linetype = "dashed"), 
+        panel.grid.major.y = element_line(colour = "grey80", linetype = "dashed"), 
+        legend.position = "top", legend.title = element_blank()) + 
+  #geom_text(aes(label = outlier), na.rm = TRUE, hjust = -0.3, size = 2, check_overlap = TRUE) + 
+  ggtitle("Energy - 2-Weeks Return") + ylim(c(-15, 15)) + 
+  labs(x= "Dates", y="Bi-monthly Return (in %)")
+
+```
+
+
+```{r trend_table_OG_prep, echo = FALSE, warning=FALSE}
+yo <- df2 %>% filter(ticker_industry == "oil_gas") %>% group_by(ticker) %>% 
+  filter(Index == max(Index)) %>% 
+  ungroup() %>% 
+  mutate_at(7:16, round, 2) %>% 
+  select(Index, Ticker = ticker, `Ticker Name`= ticker_name, 
+         `Rolling std 50 sma`= diff_sd_sma50, 
+         `Monthly Sharp R`= monthly_sharp_Ratio, `Yearly Sharp R` = yearly_sharp_Ratio, 
+         `Weekly return` = weekly_return, `Bi-monthly return` = bi_monthly_return, 
+         `Monthly return` = monthly_return, 
+         `Semester return` = semester_return, `Yearly return` = yearly_return)
+yu <- yo$Index[1]
+```
+
+
+Now let's have a recap table to drill in at the company level.  This table has been generated with data from `r format(yu, '%d %B, %Y')`
+```{r trend_table_OG, echo = FALSE}
+## Make a js table with all the variable that can be sorted.  
+DT::datatable(yo %>% select(-Index), options = list(pageLength = 10)) %>% 
+  DT::formatRound(columns = 11, digits = 2)
+```
+
+
+# The list of financial instruments  {#list_financial_instru}
+Here is the list of all equities used in this report, their sector and subsector.  
+```{r equities_table, echo=FALSE}
+#do graph by industry, sector
+#order the bar by decreasing order.  
+DT::datatable(tickers %>% select(-yahoo_ticker, -ETF, -GISC_Code), options = list(pageLength = 10), 
+             caption = "List of stocks, sectors and sub-sectors") 
+```
+
+If you have enjoyed this report, [let us now](mailto:f.deryckel@gmail.com).  
+
