@@ -5,7 +5,7 @@ date:   2018-05-22
 categories: WER Report
 ---
 
-Check [this page](https://fderyckel.github.io/WER/reports/WER_2018_05_23.html) for this week report.  
+Check [this page](https://fderyckel.github.io/WER/reports/WER_2018_05_22.html) for this week report.  
 
 This our very first WER.  We intend to make it every week.  We would love to hear from you for any feedback.  
 
