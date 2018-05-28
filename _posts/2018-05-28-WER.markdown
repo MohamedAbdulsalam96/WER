@@ -22,4 +22,4 @@ This our second WER.  What has changed?
 * Loads of small formatting changes
 
 
-For people interested, we have also posted the [Rmarkdown document]() that help us generate this report.  
+For people interested, we have also posted the [Rmarkdown document](https://fderyckel.github.io/WER/WER_V01.Rmd) that help us generate this report.  
