@@ -1,5 +1,5 @@
-theme: jekyll-theme-merlot
-
-title: "The Weekly Energy Report"
-description: "An almost automatically generated report using the R language and R markdown."
-show_downloads: "true"
+title: Architect theme
+description: Architect is a theme for GitHub Pages.
+show_downloads: true
+google_analytics:
+theme: jekyll-theme-architect
