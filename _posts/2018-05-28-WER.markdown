@@ -1,0 +1,8 @@
+---
+layout: post
+title: "WER for the 2018-05-28"
+date:   2018-05-29
+categories: WER Report
+---
+
+Check [this page](https://fderyckel.github.io/WER/reports/WER_2018_05_28.html) for this week report.  
