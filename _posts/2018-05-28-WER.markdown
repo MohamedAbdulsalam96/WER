@@ -5,7 +5,7 @@ date:   2018-05-29
 categories: WER Report
 ---
 
-This is clearly a work in progress.  We still decided to share it publicly rather than wait that we are perfectly happy with the end product in the hope that feedback will help us getting better quicker.  
+This is clearly a work in progress.  We still decided to share it publicly rather than wait that we are perfectly happy with the end product in the hope that feedback will help us get better quicker.  
 
 By energy, we understand all the companies that help in the value chain of energy production: oil, gaz, coal, uranium exploration and production. Energy service companies. oil & gas transport companies. Electricity generation and transportation. Industrial companies that manufactures turbines, solar pannels, batteries, etc.
 
