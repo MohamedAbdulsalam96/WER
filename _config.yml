@@ -1,1 +1,4 @@
 theme: jekyll-theme-merlot
+
+title: [The WEekly Energy Report]
+description: [An almost automatically generated report using the R language and R markdown.]
