@@ -5,4 +5,21 @@ date:   2018-05-29
 categories: WER Report
 ---
 
+This is clearly a work in progress.  We still decided to share it publicly rather than wait that we are perfectly happy with the end product in the hope that feedback will help us getting better quicker.  
+
+By energy, we understand all the companies that help in the value chain of energy production: oil, gaz, coal, uranium exploration and production. Energy service companies. oil & gas transport companies. Electricity generation and transportation. Industrial companies that manufactures turbines, solar pannels, batteries, etc.
+
 Check [this page](https://fderyckel.github.io/WER/reports/WER_2018_05_28.html) for this week report.  
+
+This our second WER.  What has changed? 
+
+* I have added news this week ;-)
+* I have change slightly the look of the report to have the ToC on the side and visible at all time. 
+* Added 2 ETF to the Energy Overview graphs: the USO & the MLP Energy infrastructures (MLPX)
+* Added a few more Energy Cies in the list, those having base in Europe 
+* Reformated the list of sectors and sub-sectors
+* Added a few more ETF in the O&G sections: XOP, XES
+* Loads of small formatting changes
+
+
+For people interested, we have also posted the [Rmarkdown document]() that help us generate this report.  
