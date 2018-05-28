@@ -38,7 +38,7 @@ for (i in 1:nrow(av_tickers)){
   print(av_tickers$av_ticker[i])
   data = quantmod::getSymbols(Symbols = av_tickers$av_ticker[i],
                     src = "av",
-                    api.key = "W7SHG93NFG5YWE2K", 
+                    api.key = "WHAAAAAAAT?", 
                     output.size = "full", 
                     auto.assign = FALSE,
                     index.class="POSIXct")
@@ -118,27 +118,10 @@ We would love to hear from you. Is there typos, mistakes?  Are graphs unclear?  
 
 # What made the news ?
 
-* Brent went from a high of $80.5 to $76.5... Still a very nice price for all the oil producers.  
-* The party in the Oil & Gas energy stocks was put on a halt at the end of the week when the OPEC big bwana, Saudi Arabia through its energy minister and its Russian counterpart met in St. Petersburg and decided it was maybe time to pump and bring on the market some more oil.  THE EIA announcing an increase in stocks on Wednesday did not help.  
-      + I am finding this alliance between KSA and Russia rather beffudling.  On one side, Russia is parterning with Iran in Syria.  On the Other side, this is the second time in a month that the energy minister of both countries are meeting and talking oil output.  I am wondering how long can Russia stay so slick.  
-* OPEC Meeting on the 22 June in Vienna where they'll discuss increase in oil production.  I know quite a few have been amazed on how OPEC has managed to mainly stick to their quota for the last couple of years.  We've been so used with OPEC that there is always a few members not respecting their deal.    
-* We got a note from the FED Mai minute meeting: if the price of oil continue to climb then there might be another increase in interest rate.  Glad the FED guys are not sleeping on their desk and realize that higher energy price will lead to higher inflation... duh!  
-* The increase in price has many reasons. To go over a few: 
-     + reduction in output from a few places such as Venezuela
-     + tension in the Middle-East (when is that not a news?).  More specifically, we have Saudi Arabia and Iran not going on to well together lately.  Uncle Donald adding *fire* to the situation by going back on the deal the US made with a few other countries (Russia, Germany, France) to get back Iran on the international scene
-     + As the US renegate the Iranian deal, it might hurt more small European Cies doing business there as there will be liable to US sanctions.  China, India will keep buying their oil there as they have done in the past.  
-* Saudi has been a reliable indicator.  They said they wanted oil at $80, they now get it... so they are willing to produce more as they don't want demand to crumble because of too high of a price.  Saudi, Russia will do everything they can to keep price at that level (understand $60-$80) as they need the money for their own national budget (think Saudi 2030 Vision).
-* As long as electric cars are a luxury good, increase in oil price will do little to switch consumers to that market.  
-* In the NIMBY section, we have the Canadian saga about the Trans Mountain pipeline.  Kinder Morgan (KMI) being in between the legal battle of British Columbia and Alberta.  It is nice to have oil but if you can't move it ... it sucks!
+
 
 # Report higlights. 
 
-* [Last week report](https://fderyckel.github.io/WER/reports/WER_2018_05_22.html) had so many [stocks above their 50 SMA](#og_breadth), it was just a matter of time to have a reversion to more normal level. And this is what happened on Thursday and Friday.    
-* At the same time, we had a few individual stocks who were so high above their 50 SMA (comparing to their average distance from their 50 SMA), that it was also just a question of time (days) for these stocks to go back to their more normal level.  Chesapeake Energy Corporation (CHK) was such a stock.  It still climbed up early in the week, but got a severe reversal on Thursday and Friday.  
-* On the [Energy Overview](#ener_overview), we notice that all form of energy stumbled including uranium and coal.  Gaz is the only one that managed to keep its cool. 
-* Most energies ETF have delivered *alpha* vs the S&P500 over the last 3 months and 12 months.  Uranium and the MLP's being exception. The coal party - after Trump election - seems to see its end.   
-* If we dig in the O&G, XOP and CHIE hae been the best performers.  Canadians energy stocks still struggles to keep up.  The Canadian exchanges are still suffering from the commodities bear market.  There are signs we are getting out of it though.
-* For seven weeks in a row, we got the positive weekly returns for over 50% of the O&G stocks: [the median line](#weekly_return) being positive. 
 
 
 # General Energy overview {#ener_overview} 
