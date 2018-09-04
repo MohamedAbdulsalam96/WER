@@ -1,0 +1,22 @@
+---
+layout: post
+title: "WER for the 2018-09-03"
+date:   2018-09-04
+comments: true
+categories: WER Report
+---
+
+Although the WER is very much a work in progress, we still decided to share it publicly (rather than wait that we are perfectly happy with the end product) in the hope that feedback will help us get better quicker.  
+
+By energy, we understand all the companies that help in the value chain of energy production: oil, gaz, coal, uranium exploration and production. Energy service companies. oil & gas transport companies. Electricity generation and transportation. Industrial companies that manufactures turbines, solar pannels, batteries, etc.
+
+Check [this page](https://fderyckel.github.io/WER/reports/WER_2018_06_04.html) for this week report.  
+
+This our third WER.  What has changed? 
+
+* Nothing ;-) . We just come back from holidays.  Catching back with the energy news was something!  Very different place today then where we left it early June (Market wise at least ;-) 
+
+
+
+
+For people interested, we have also posted the [Rmarkdown document](https://fderyckel.github.io/WER/WER_V01.Rmd) that help us generate this report.  
