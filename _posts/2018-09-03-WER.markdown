@@ -12,7 +12,7 @@ By energy, we understand all the companies that help in the value chain of energ
 
 Check [this page](https://fderyckel.github.io/WER/reports/WER_2018_09_03.html) for this week report.  
 
-This our third WER.  What has changed? 
+This our fourth WER.  What has changed? 
 
 * Nothing ;-) . We just come back from holidays.  Catching back with the energy news was something!  Very different place today then where we left it early June (Market wise at least ;-) 
 * The file is getting bigger and bigger though.
@@ -20,4 +20,4 @@ This our third WER.  What has changed?
 
 
 
-For people interested, we have also posted the [Rmarkdown document](https://fderyckel.github.io/WER/WER_V01.Rmd) that help us generate this report.  
+For people interested, we have also posted the [Rmarkdown document](https://fderyckel.github.io/WER/WER_V01.Rmd) that help us generate this report.  It might slightly outdated. 
