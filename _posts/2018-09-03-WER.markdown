@@ -10,11 +10,12 @@ Although the WER is very much a work in progress, we still decided to share it p
 
 By energy, we understand all the companies that help in the value chain of energy production: oil, gaz, coal, uranium exploration and production. Energy service companies. oil & gas transport companies. Electricity generation and transportation. Industrial companies that manufactures turbines, solar pannels, batteries, etc.
 
-Check [this page](https://fderyckel.github.io/WER/reports/WER_2018_06_04.html) for this week report.  
+Check [this page](https://fderyckel.github.io/WER/reports/WER_2018_09_03.html) for this week report.  
 
 This our third WER.  What has changed? 
 
 * Nothing ;-) . We just come back from holidays.  Catching back with the energy news was something!  Very different place today then where we left it early June (Market wise at least ;-) 
+* The file is getting bigger and bigger though.
 
 
 
