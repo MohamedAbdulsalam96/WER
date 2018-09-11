@@ -15,7 +15,8 @@ Check [this page](https://fderyckel.github.io/WER/reports/WER_2018_09_10~~.html)
 This our fourth WER.  What has changed? 
 
 * Nothing ;-) . ~~We just come back from holidays.~~  We are still in holidays mode ;-)  Catching back with the energy news was something!  Very different place today then where we left it early June (Market wise at least ;-) 
-* The file is getting bigger and bigger though.
+* ~~The file is getting bigger and bigger though.~~ . Well we've retired the plotly plots for the ggplot2 to make the file lighter.  But we have kept the JS associated with the table.  We like that.  
+* We have added a link to a chart for each of the stock we follow.  Link can be found [here](https://fderyckel.github.io/WER/oil_gaz.pdf)
 
 
 
