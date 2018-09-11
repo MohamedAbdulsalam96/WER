@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "WER for the 2018-09-10"
-date:   2018-09-04
+date:   2018-09-11
 comments: true
 categories: WER Report
 ---
