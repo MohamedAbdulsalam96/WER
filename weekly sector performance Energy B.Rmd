@@ -1,0 +1,324 @@
+---
+title: "Energy Sector Weekly Report V1.1"
+author: "[François de Ryckel](https://fderyckel.github.io/aboutme/)<br>I'm on [Twitter](https://twitter.com/Read_The_Dung) and on [Github](https://github.com/fderyckel)"
+date: "`r format(Sys.Date(), '%d %B, %Y')`"
+output: 
+  html_document:
+    highlight: tango
+    theme: spacelab
+    toc_float: true
+    toc: yes
+    toc_depth: 2
+    df_print: paged
+---
+
+This is the weekly **Energy Sector** financial summary.  
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE, 
+  warning = FALSE, 
+  message = FALSE
+)
+
+
+```
+
+```{r load_libraries}
+library(tidyverse)
+library(forcats)
+library(lubridate)
+library(scales)
+library(bdscale)
+
+# setting up the path within the project for easier portability of code
+thePath <- here::here()
+
+source(paste0(thePath, "/functions/get_data.R"))
+source(paste0(thePath, "/functions/augment_data.R"))
+source(paste0(thePath, "/functions/visualize_data.R"))
+
+tickers <- readr::read_csv(paste0(thePath, "/10_energy/", "tickers.csv"))
+tickers$ticker_stock_exchange <- as_factor(tickers$ticker_stock_exchange)
+tickers$ticker_industry <- as_factor(tickers$ticker_industry)
+tickers$ticker_sector <- as_factor(tickers$ticker_sector)
+tickers <- tickers %>% arrange(ticker_industry, ticker_sector, ticker_subsector)
+
+#tickers <- tickers[52:66, ] 
+```
+
+```{r downloading_data, eval = FALSE}
+#get_eod_data(tickers)
+
+#download data otherway
+yo <- tickers %>% #filter(api_ticker == "CJ") %>% # filter(en_biggest_perc == "ETF") %>% 
+  select(api_ticker, ticker_stock_exchange) %>% 
+  mutate(yoo = walk2(api_ticker, ticker_stock_exchange, get_eod_data_II))
+
+```
+
+```{r loading_data}
+tickerss <- tickers[1:30, ] %>% select(api_ticker, ticker_stock_exchange, ticker_industry)
+#tickerss <- tickers %>% select(api_ticker, ticker_stock_exchange, ticker_industry)
+df <- tickerss %>% filter(is.na(api_ticker) == 0) %>% 
+  mutate(raw_fin_data = map2(api_ticker, ticker_stock_exchange, load_fin_data), 
+         augmented_fin_data = map(raw_fin_data, possibly(create_big_df, otherwise = NA)))
+
+```
+
+
+The *Weekly Energy Report* attempt to see the big trends in the energy sectors[^0]. 
+
+We are mainly interested in understanding the transition from an **oil world** to an **energy world**. 
+
+At the moment, the report is build around `r nrow(tickers)` companies.  You can see their tickers, names, sectors and sub-sectors at [the end](#list_financial_instru) of the report. We created chart for each of these companies.  The whole bundle of charts available [here](https://fderyckel.github.io/WER/oil_gaz.pdf). 
+
+Also, the focus is really on North-American Oil & Gas companies.  We will address this shortcoming ~~soon~~ by adding more European and Asian energy companies to the mix as well as diversifying the industries to include uranium, electricity generations, renewable energies and industrials[^1].  
+
+[^1]: We use the *AlphaVantage* [API](https://www.alphavantage.co/) to get our data.  
+
+[^0]: The report has been generated with the R language and thanks to the many community members who have contributed their time in building packages.  
+ 
+We would love to hear from you. Are there typos, mistakes?  Are graphs unclear?  not useful? Should we add additional resources and analysis?  Write us a [mail](mailto:f.deryckel@gmail.com)    
+
+To read the last report, go [here](https://fderyckel.github.io/WER/reports/WER_2018_09_03.html) and to see the second to last one go [here](https://fderyckel.github.io/WER/reports/WER_2018_06_11.html)
+
+# What made the news ?  {.tabset}
+
+## Oil and Gas
+* Big news are: 
+    + 
+
+## Renewable Energies
+*  
+
+## Uranium  
+
+
+## Utilities - Electricity Generations
+* 
+
+# Report higlights. 
+
+*  
+
+
+# General Energy overview {#ener_overview} 
+
+List of ETF selected for the general overview.  
+```{r energy_global_etf_choice}
+df_ticker <- tibble(ticker = c("KOL", "IXC", "UNG", "MLPX", "URA", "SPY", "VDE"))
+
+df2 <- inner_join(df_ticker %>% select(api_ticker = ticker), tickers, by = "api_ticker") %>% 
+  select(ticker = api_ticker, Name = ticker_name, ticker_stock_exchange)
+
+knitr::kable(df2 %>% select(-ticker_stock_exchange), caption = "Selected Energy related ETF")
+```
+
+Returns of the energy ETF over the last 3 months
+```{r energy_3months_return, out.width = 900}
+df3 <- df2 %>% rename(api_ticker = ticker) %>% 
+  mutate(price_data = map2(api_ticker, ticker_stock_exchange, load_fin_data), 
+         adjusted_return = map(price_data, 
+                               function(.x) get_adjusted_return(.x, start_date = today() - 63))) %>% 
+  select(-price_data, -ticker_stock_exchange) %>% unnest() 
+
+plot_adjusted_return(df3, "3 months ETF return")
+```
+
+Returns of the energy ETF over the last 12 months
+```{r energy_12months_return, out.width = 900}
+df3 <- df2 %>% rename(api_ticker = ticker) %>% 
+  mutate(price_data = map2(api_ticker, ticker_stock_exchange, load_fin_data), 
+         adjusted_return = map(price_data, 
+                               function(.x) get_adjusted_return(.x, start_date = today() - 365))) %>% 
+  select(-price_data, -ticker_stock_exchange) %>% unnest()
+
+plot_adjusted_return(df3, "12 months ETF return")
+```
+
+
+
+# The Oil & Gas Industry   {.tabset}
+Following GISC, the Oil & Gas (OG) industry consists of the following sectors and sub-sectors: 
+```{r display_sectors_OG}
+yo <- tickers %>% filter(ticker_industry == "oil_gas") %>% arrange(GISC_Code) %>% 
+  select(ticker_sector, ticker_subsector, ticker_name) %>% 
+  group_by(ticker_sector, ticker_subsector) %>% summarize(numerb = n()) %>% 
+  #unique() %>% 
+  na.omit() %>% select(Sector = ticker_sector, Subsector = ticker_subsector, `Number of stocks` = numerb)
+
+yo$Sector = str_replace_all(yo$Sector, c("energy_equipment_services" = "Equipment & Services", 
+                                         "oil_gas_consumable_fuels" = "Consumable Fuels"))
+
+yo$Subsector = str_replace_all(yo$Subsector, c("drilling" = "Drilling", 
+                                               "equipment_services" = "Equipment & Services Cies", 
+                                               "exploration_production" = "Exploration & Production Cies", 
+                                               "integrated" = "Major Integrated Cies",
+                                               "refining_marketing" = "Refining & Marketing Cies", 
+                                               "storage_transportation" = "Storage & Transportation Cies"))
+
+knitr::kable(yo, caption = "List of Sectors and Sub-sectors of the O&G Industry")
+```
+
+[At the bottom of this file](##list_financial_instru), there is the complete list of financial instruments with their sectors and sub-sectors on which the following analysis has been based on. 
+
+## Long term trends
+Let's check the main Oil & Gas ETF returns. 
+We have picked the following ETF
+```{r og_etf}
+og_etf <- c("XOP", "OIH", "VDE", "CHIE")
+df2 <- tickers %>% filter(api_ticker %in% og_etf) %>% 
+  select(Ticker = api_ticker, Name = ticker_name)
+knitr::kable(df2)
+```
+
+```{r etf_oneyar_return, echo=TRUE, eval=FALSE, out.width = 900}
+df2 <- tibble(ticker = og_etf)
+
+df2 <- df2 %>% 
+  mutate(price_data = map(ticker, function(.x) read_fin_data(.x))) %>% 
+  unnest()
+df2$Index <- ymd(df2$Index)
+
+
+df2 <- df %>% rename(api_ticker = ticker) %>% 
+  mutate(price_data = map2(api_ticker, ticker_stock_exchange, load_fin_data), 
+         adjusted_return = map(price_data, 
+                               function(.x) get_adjusted_return(.x, start_date = today() - 365))) %>% 
+  select(-price_data, -ticker_stock_exchange) %>% unnest()
+
+
+plot_adjusted_return(df2, "12 months ETF return")
+
+```
+
+## Breadth of the Oil & Gas Market  {#og_breadth}
+Usually, on shorter time frame, we use the 50 days Standard Moving Average (SMA) to see if a stock is in an uptrend.  The graphs below does exactly that: it checks the percentage of stocks that are trading above their 50 days SMA.  This also tell us when the sector might be over-extended to the upside or to the downside.  
+
+```{r percent_stock_above_sma50, echo=FALSE, warning=FALSE, out.width = 700, dpi = 300}
+df2 <- df %>% select(api_ticker, augmented_fin_data) %>% 
+  filter(is.na(augmented_fin_data) == 0) %>% 
+  unnest() %>% 
+  select(api_ticker, Index, sma50_abov) %>% #filter(Index == today() - 1)
+  mutate(sma50_abov_bin = if_else(sma50_abov > 0, 1, 0)) %>% group_by(Index) %>% 
+  summarise(number_stocks = n(), 
+            stock_above_sma50 = sum(sma50_abov_bin, na.rm = TRUE)) %>% 
+  mutate(percentage_above = stock_above_sma50 / number_stocks)
+
+# filter df2 for the last 3 years
+df3 <- df2 %>% filter(Index >= today() - 3*365) %>% 
+  #filtering out the days some markets are not open
+  mutate(market_open = if_else(number_stocks < 0.75 * lag(number_stocks), 0, 1)) %>% 
+  filter(market_open == 1)
+
+# Create our breadth indicator graph 
+ggplot(df3, aes(x = Index, y = percentage_above)) + 
+  geom_line() + 
+  geom_hline(yintercept = 0.875, color = "red", linetype = "dashed") + 
+  geom_hline(yintercept = 0.125, color = "red", linetype = "dashed") + 
+  scale_y_continuous(labels = scales::percent) + 
+  scale_x_date(name = "Dates", date_breaks = "4 months", date_labels = "%b %y") + 
+  theme(axis.title.y = element_blank(), 
+        axis.title.x = element_blank(), 
+        axis.text.x = element_text(angle = 60, vjust = 0.5), 
+        panel.background = element_rect(fill = "white"), 
+        panel.grid.minor.y = element_line(colour = "grey50", linetype = "dashed"), 
+        panel.grid.major.y = element_line(colour = "grey80", linetype = "dashed")) + 
+  ggtitle("Percentage of stocks above their 50 SMA")
+```
+
+
+## Weekly and bi-monthly returns  {#weekly_returns} 
+In this section, we check the weekly return for the last 12 weeks for all stocks belonging to the industry, sectors and sub-sectors.  
+```{r main_df_creation, eval = FALSE, echo = TRUE}
+df2 <- df %>% select()
+  filter(days_of_week == "Monday" & ticker_industry == "oil_gas") %>% group_by(ticker) %>% 
+  arrange(desc(Index)) %>% 
+  filter(row_number() %in% c(1:12)) %>% 
+  mutate(bi_monthly_yes = rep(seq(0, 1), 6)) %>% 
+  ungroup()
+
+```
+
+
+```{r weekly_return, warning=FALSE, echo = FALSE, out.width = 900, dpi = 300}
+# Function to detect ouliers-ish (very loose definition)
+is_outlier <- function(x) {
+  return(x < quantile(x, 0.25) - 0.95 * IQR(x) | x > quantile(x, 0.75) + 0.95 * IQR(x))
+}
+
+yo <- ymd(as.character(df$Index)) 
+yo <- tibble(dates = yo) %>% group_by(dates) %>% summarise(yup = unique(dates)) %>% arrange(desc(dates)) 
+
+df %>% filter(Index >= yo$dates[12]) %>% 
+  mutate(outlier = if_else(is_outlier(weekly_return), ticker, as.character(NA))) %>% 
+  ggplot(., aes(x=as.factor(Index), y = weekly_return, col = Index)) + geom_boxplot() + 
+  #scale_colour_gradient(low = "dodgerblue1", high = "dodgerblue4") + 
+  theme(axis.text.x = element_text(colour="grey20", size=8, angle=50, hjust=.5, vjust=.5), 
+        panel.background = element_rect(fill = "white"), 
+        panel.grid.minor.y = element_line(colour = "grey50", linetype = "dashed"), 
+        panel.grid.major.y = element_line(colour = "grey80", linetype = "dashed"), 
+        legend.position = "none") + 
+  geom_text(aes(label = outlier), na.rm = TRUE, hjust = -0.3, size = 2, check_overlap = TRUE) + 
+  geom_hline(yintercept = 0, color = "red") + 
+  ggtitle("Energy - Weekly Return") + ylim(c(-15, 15)) + 
+  labs(x= "Dates", y="Weekly Return (in %)") 
+```
+
+We do the same graph but with a 2 weeks return and a disaggregation by sub-sector.  
+```{r bi_monthly_return, warning=FALSE, echo = FALSE, out.width = 900, dpi = 300}
+# bi-monthly return boxplot ordered with sub-sector
+n <- seq(0:5) - 1
+dates <- tibble(value = yo$dates[1] - 14*n)
+df %>% filter(Index %in% unlist(dates)) %>% 
+  group_by(Index) %>% 
+  #mutate(outlier = if_else(is_outlier(bi_monthly_return), ticker, as.character(NA))) %>% 
+  ggplot(., aes(x=as.factor(Index), y = bi_monthly_return, fill = ticker_subsector)) + geom_boxplot() + 
+  theme(axis.text.x = element_text(colour="grey20", size=8, angle=50, hjust=.5, vjust=.5), 
+        panel.background = element_rect(fill = "white"), 
+        panel.grid.minor.y = element_line(colour = "grey50", linetype = "dashed"), 
+        panel.grid.major.y = element_line(colour = "grey80", linetype = "dashed"), 
+        legend.position = "top", legend.title = element_blank()) + 
+  #geom_text(aes(label = outlier), na.rm = TRUE, hjust = -0.3, size = 2, check_overlap = TRUE) + 
+  ggtitle("Energy - 2-Weeks Return") + ylim(c(-15, 15)) + 
+  labs(x= "Dates", y="Bi-monthly Return (in %)")
+
+```
+
+## Recap table  
+```{r trend_table_OG_prep, echo = FALSE, warning=FALSE}
+yo <- df2 %>% filter(ticker_industry == "oil_gas") %>% group_by(ticker) %>% 
+  filter(Index == max(Index)) %>% 
+  ungroup() %>% 
+  mutate_at(7:16, round, 2) %>% 
+  select(Index, Ticker = ticker, `Ticker Name`= ticker_name, 
+         `Rolling std 50 sma`= diff_sd_sma50, 
+         `Monthly Sharp R`= monthly_sharp_Ratio, `Yearly Sharp R` = yearly_sharp_Ratio, 
+         `Weekly return` = weekly_return, `Bi-monthly return` = bi_monthly_return, 
+         `Monthly return` = monthly_return, 
+         `Semester return` = semester_return, `Yearly return` = yearly_return)
+yu <- yo$Index[1]
+```
+
+Now let's have a recap table to drill in at the company level.  This table has been generated with data from `r format(yu, '%d %B, %Y')`
+```{r trend_table_OG, echo = TRUE, eval = FALSE}
+## Make a js table with all the variable that can be sorted.  
+DT::datatable(yo %>% select(-Index), options = list(pageLength = 10)) %>% 
+  DT::formatRound(columns = 11, digits = 2)
+```
+
+
+# Uranium {.tabset}
+
+# The list of financial instruments  {#list_financial_instru}
+Here is the list of all equities used in this report, their sector and sub-sector.  
+```{r equities_table, echo=TRUE, eval=FALSE}
+#do graph by industry, sector
+#order the bar by decreasing order.  
+DT::datatable(tickers %>% select(-yahoo_ticker, -ETF, -GISC_Code), options = list(pageLength = 10), 
+             caption = "List of stocks, sectors and sub-sectors") 
+```
+
+If you have enjoyed this report, [let us now](mailto:f.deryckel@gmail.com).  
+
